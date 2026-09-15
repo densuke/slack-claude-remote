@@ -1,0 +1,18 @@
+[Unit]
+Description=slack-claude-remote relay
+After=network.target
+
+[Service]
+Type=simple
+User=sccr
+EnvironmentFile=/etc/sccr/env
+WorkingDirectory=/var/lib/sccr
+ExecStart=/usr/local/bin/sccr-relay
+Restart=always
+RestartSec=2
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/sccr
+
+[Install]
+WantedBy=multi-user.target
