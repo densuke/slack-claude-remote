@@ -17,7 +17,8 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/slack/events", post(slack::events))
         .route("/slack/commands", post(slack::commands))
         .route("/slack/interactions", post(slack::interactions))
-        .route("/agent/ws", get(agent_ws::handler));
+        .route("/agent/ws", get(agent_ws::handler))
+        .merge(crate::auth::routes::router());
     let app = if state.cfg.dev {
         app.route("/dev/inject", post(dev::inject))
     } else {
