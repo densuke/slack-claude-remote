@@ -47,6 +47,17 @@ impl AppState {
     }
 }
 
+/// Writes the state file; logs and returns false on failure.
+pub(crate) fn save_store(state: &AppState, store: &Store) -> bool {
+    match store.save(&state.cfg.state_file) {
+        Ok(()) => true,
+        Err(e) => {
+            eprintln!("state file save failed: {e}");
+            false
+        }
+    }
+}
+
 pub fn unix_now() -> i64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
