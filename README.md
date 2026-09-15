@@ -32,36 +32,32 @@ cargo fmt --all && cargo clippy --all-targets -- -D warnings && cargo test --all
 - `deploy/slack-manifest.json` の 4 箇所の URL（`oauth_config.redirect_urls`、`features.slash_commands[0].url`、`settings.event_subscriptions.request_url`、`settings.interactivity.request_url`）
 - DNS で `slcc.fuga.jp` が e2 の IP を向いていること
 
-### 1. e2 側: ビルド
+### 1. e2 側: バイナリの入手
 
-`sccr-relay` を e2 上で動かすバイナリにする方法は 2 通りです。
+バイナリは GitHub Actions（`.github/workflows/release.yml`）でビルドし、`v*` タグを push すると GitHub Releases に置かれます。
 
-**方法 A: e2 上でビルドする**
+- `sccr-relay-x86_64-unknown-linux-musl.tar.gz`: e2（x86_64 Linux）用の静的リンクバイナリ
+- `sccr-agent-aarch64-apple-darwin.tar.gz`: Apple Silicon Mac 用の agent
+
+**方法 A（推奨）: Releases から取得する**
 
 ```bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source "$HOME/.cargo/env"
-git clone <このリポジトリ> sccr && cd sccr
-cargo build --release -p sccr-relay
-# 成果物: target/release/sccr-relay
+VERSION=v0.1.0
+curl -fsSLO https://github.com/densuke/slack-claude-remote/releases/download/$VERSION/sccr-relay-x86_64-unknown-linux-musl.tar.gz
+curl -fsSLO https://github.com/densuke/slack-claude-remote/releases/download/$VERSION/sccr-relay-x86_64-unknown-linux-musl.tar.gz.sha256
+sha256sum -c sccr-relay-x86_64-unknown-linux-musl.tar.gz.sha256
+tar -xzf sccr-relay-x86_64-unknown-linux-musl.tar.gz -C /tmp
+# 成果物: /tmp/sccr-relay
 ```
 
-**方法 B: Mac でクロスビルドして転送する**
+**方法 B: 手元でビルドする**
 
-e2 の CPU アーキテクチャを先に確認します。
+e2 上でビルドする場合は、rustup を入れて `cargo build --release -p sccr-relay` を実行します。
 
-```bash
-ssh e2 uname -m
-# x86_64 → x86_64-unknown-linux-musl
-# aarch64 / arm64 → aarch64-unknown-linux-musl
-```
-
-Mac 側（`cross` を使うとリンカ周りの面倒がありません。Docker が必要です）:
+Mac でクロスビルドする場合は、CI と同じく `cargo-zigbuild` を使います（`zig` と `rustup target add x86_64-unknown-linux-musl` が必要です）。
 
 ```bash
-cargo install cross --git https://github.com/cross-rs/cross
-cross build --release --target x86_64-unknown-linux-musl -p sccr-relay
-# arm64 の e2 なら --target aarch64-unknown-linux-musl
+cargo zigbuild --release -p sccr-relay --target x86_64-unknown-linux-musl
 scp target/x86_64-unknown-linux-musl/release/sccr-relay e2:/tmp/sccr-relay
 ```
 
