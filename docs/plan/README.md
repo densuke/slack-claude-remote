@@ -131,7 +131,7 @@ pub enum Behavior { Allow, Deny }
 relay:
 
 - `SCCR_BIND`（既定 `127.0.0.1:8080`）
-- `SCCR_PUBLIC_URL`（例 `https://sccr.example.jp`）
+- `SCCR_PUBLIC_URL`（例 `https://slcc.fuga.jp`）
 - `SCCR_STATE_FILE`（既定 `./sccr-state.json`）
 - `SCCR_ADMIN_SLACK_USER`
 - `SLACK_SIGNING_SECRET` `SLACK_BOT_TOKEN` `SLACK_CLIENT_ID` `SLACK_CLIENT_SECRET`
@@ -139,7 +139,7 @@ relay:
 
 agent:
 
-- `SCCR_RELAY_URL`（例 `wss://sccr.example.jp/agent/ws`）
+- `SCCR_RELAY_URL`（例 `wss://slcc.fuga.jp/agent/ws`）
 - `SCCR_TOKEN`
 - `SCCR_SESSION_NAME`（任意。既定は `hostname:カレントディレクトリ名`）
 

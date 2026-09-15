@@ -25,12 +25,12 @@ cargo fmt --all && cargo clippy --all-targets -- -D warnings && cargo test --all
 
 構成は「e2 で `sccr-relay` を常時稼働させ、Caddy で TLS 終端して Slack から HTTPS で叩けるようにする。手元 Mac では `sccr-agent` を Claude Code の channel として起動し、e2 の relay へ WebSocket でつなぎに行く」というものです。
 
-以下では公開ホスト名を `sccr.example.jp` と書いています。**これはプレースホルダです**。実際のホスト名に置き換える箇所は次のとおりです。
+公開ホスト名は `slcc.fuga.jp` です。別のホスト名で動かす場合は、次の箇所を置き換えてください。
 
-- `deploy/Caddyfile.snippet` の `sccr.example.jp {` の行
+- `deploy/Caddyfile.snippet` の `slcc.fuga.jp {` の行
 - `deploy/env.example`（実運用では `/etc/sccr/env`）の `SCCR_PUBLIC_URL`
 - `deploy/slack-manifest.json` の 4 箇所の URL（`oauth_config.redirect_urls`、`features.slash_commands[0].url`、`settings.event_subscriptions.request_url`、`settings.interactivity.request_url`）
-- DNS で `sccr.example.jp` が e2 の IP を向いていること
+- DNS で `slcc.fuga.jp` が e2 の IP を向いていること
 
 ### 1. e2 側: ビルド
 
@@ -112,7 +112,7 @@ sudo systemctl reload caddy
    - **Basic Information** → App Credentials → Signing Secret → `SLACK_SIGNING_SECRET`
    - **Basic Information** → App Credentials → Client ID / Client Secret → `SLACK_CLIENT_ID` / `SLACK_CLIENT_SECRET`
    - **OAuth & Permissions** → Bot User OAuth Token（`xoxb-` で始まる）→ `SLACK_BOT_TOKEN`
-5. 値を反映したら relay を再起動します（`sudo systemctl restart sccr-relay`）。`GET https://sccr.example.jp/healthz` が `ok` を返せばここまで正常です。
+5. 値を反映したら relay を再起動します（`sudo systemctl restart sccr-relay`）。`GET https://slcc.fuga.jp/healthz` が `ok` を返せばここまで正常です。
 6. Slack アプリの **Event Subscriptions** 画面で Request URL が Verified になっているか確認します。manifest インポート直後は relay がまだ正しい `SLACK_SIGNING_SECRET` で起動していないため未検証のことがあり、その場合は URL 欄で **Retry** を押すと検証し直せます。
 7. 会話に使う Slack チャンネルに bot を招待します（`/invite @sccr`。表示名は manifest の `bot_user.display_name` です）。招待していないチャンネルで `/cc` を実行すると `Invite the bot to this channel first.` と返ります。
 
@@ -120,7 +120,7 @@ sudo systemctl reload caddy
 
 ### 5. 初回ログインと agent トークン発行
 
-1. ブラウザで `https://sccr.example.jp/` を開くと `/login` にリダイレクトされ、Slack の認可画面に進みます。
+1. ブラウザで `https://slcc.fuga.jp/` を開くと `/login` にリダイレクトされ、Slack の認可画面に進みます。
 2. `SCCR_ADMIN_SLACK_USER` に設定した Slack user ID でログインした場合だけ成功します。それ以外のユーザーは `403` です。
 3. ログイン後の管理画面でラベルを入力してトークンを発行します。**表示は 1 回だけです**（relay が保存するのは SHA-256 ハッシュのみ）。控えて次の手順で使います。
 
@@ -132,7 +132,7 @@ sudo systemctl reload caddy
 
 ```bash
 claude mcp add sccr \
-  -e SCCR_RELAY_URL=wss://sccr.example.jp/agent/ws \
+  -e SCCR_RELAY_URL=wss://slcc.fuga.jp/agent/ws \
   -e SCCR_TOKEN=<手順5で発行したトークン> \
   -- /path/to/sccr-agent
 ```
@@ -142,7 +142,7 @@ claude mcp add sccr \
 
 ```bash
 claude mcp add sccr \
-  -e SCCR_RELAY_URL=wss://sccr.example.jp/agent/ws \
+  -e SCCR_RELAY_URL=wss://slcc.fuga.jp/agent/ws \
   -e SCCR_TOKEN=<トークン> \
   -e SCCR_SESSION_NAME=macbook:myproject \
   -- /path/to/sccr-agent
