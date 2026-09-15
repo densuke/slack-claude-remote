@@ -148,8 +148,6 @@ fn handle_permission_request(params: Option<&Value>) -> Outcome {
 }
 
 /// Build the `notifications/claude/channel` line sent to Claude on an inbound Slack message.
-// Wired up by ws.rs in T3-1; unused until then.
-#[allow(dead_code)]
 pub fn channel_notification(chat_id: &str, user: &str, text: &str) -> Value {
     json!({
         "jsonrpc": "2.0",
@@ -162,8 +160,6 @@ pub fn channel_notification(chat_id: &str, user: &str, text: &str) -> Value {
 }
 
 /// Build the `notifications/claude/channel/permission` line sent to Claude after a verdict.
-// Wired up by ws.rs in T3-1; unused until then.
-#[allow(dead_code)]
 pub fn permission_notification(request_id: &str, behavior: Behavior) -> Value {
     let behavior = match behavior {
         Behavior::Allow => "allow",

@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+futures-util = "0.3.31"
 protocol = { version = "0.1.0", path = "../protocol" }
 serde_json = "1.0.151"
-tokio = { version = "1.53.1", features = ["rt-multi-thread", "macros", "io-std", "io-util", "sync"] }
+tokio = { version = "1.53.1", features = ["rt-multi-thread", "macros", "io-std", "io-util", "sync", "net", "time"] }
+tokio-tungstenite = { version = "0.30.0", features = ["rustls-tls-webpki-roots"] }
