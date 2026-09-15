@@ -138,6 +138,7 @@ claude mcp add sccr \
 ```
 
 同じディレクトリで動かす別のセッションと区別したい場合は `SCCR_SESSION_NAME` も一緒に渡します（省略時は `{hostname}:{カレントディレクトリ名}`）。
+同じ名前のセッションがすでに relay に接続していると、後から起動した側は `session name already connected` で拒否され、再接続を繰り返します。同じディレクトリで Claude Code を 2 つ以上動かすときは、それぞれ別の `SCCR_SESSION_NAME` を指定してください。
 
 ```bash
 claude mcp add sccr \
