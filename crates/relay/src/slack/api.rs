@@ -41,6 +41,7 @@ pub struct HttpSlack {
 impl HttpSlack {
     pub fn new(bot_token: String) -> Result<Self, SlackError> {
         let client = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(10))
             .build()
             .map_err(|e| SlackError(e.to_string()))?;
         Ok(Self { client, bot_token })

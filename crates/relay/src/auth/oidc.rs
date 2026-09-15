@@ -132,7 +132,10 @@ impl OidcHttp for HttpOidc {
         client_secret: &str,
         redirect_uri: &str,
     ) -> Result<String, OidcError> {
-        let client = reqwest::Client::new();
+        let client = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(10))
+            .build()
+            .map_err(|e| OidcError::Http(e.to_string()))?;
         let resp = client
             .post("https://slack.com/api/openid.connect.token")
             .form(&[
