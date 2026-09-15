@@ -43,6 +43,10 @@ dependencies = [
 [[package]]
 name = "sccr-agent"
 version = "0.1.0"
+dependencies = [
+ "protocol",
+ "serde_json",
+]
 
 [[package]]
 name = "sccr-relay"
