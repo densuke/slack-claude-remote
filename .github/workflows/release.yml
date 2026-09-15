@@ -13,21 +13,19 @@ jobs:
     env:
       TARGET: x86_64-unknown-linux-musl
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-unknown-linux-musl
-      - uses: mlugg/setup-zig@v2
-      - uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-zigbuild
+      - name: install cargo-zigbuild (bundles ziglang)
+        run: pipx install cargo-zigbuild
       - run: cargo zigbuild --release --locked -p sccr-relay --target "$TARGET"
       - name: package
         run: |
           mkdir -p dist
           tar -C "target/$TARGET/release" -czf "dist/sccr-relay-$TARGET.tar.gz" sccr-relay
           (cd dist && sha256sum "sccr-relay-$TARGET.tar.gz" > "sccr-relay-$TARGET.tar.gz.sha256")
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: sccr-relay-linux
           path: dist/*
@@ -37,7 +35,7 @@ jobs:
     env:
       TARGET: aarch64-apple-darwin
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --release --locked -p sccr-agent --target "$TARGET"
       - name: package
@@ -45,7 +43,7 @@ jobs:
           mkdir -p dist
           tar -C "target/$TARGET/release" -czf "dist/sccr-agent-$TARGET.tar.gz" sccr-agent
           (cd dist && shasum -a 256 "sccr-agent-$TARGET.tar.gz" > "sccr-agent-$TARGET.tar.gz.sha256")
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: sccr-agent-macos
           path: dist/*
@@ -55,7 +53,7 @@ jobs:
     needs: [relay-linux, agent-macos]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
