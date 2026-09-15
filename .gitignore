@@ -1,0 +1,4 @@
+/target
+.env
+sccr-state.json
+.DS_Store
