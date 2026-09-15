@@ -17,8 +17,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-unknown-linux-musl
-      - name: install cargo-zigbuild (bundles ziglang)
-        run: pipx install cargo-zigbuild
+      - name: install cargo-zigbuild and ziglang
+        run: |
+          python3 -m venv "$RUNNER_TEMP/zigbuild"
+          "$RUNNER_TEMP/zigbuild/bin/pip" install --quiet cargo-zigbuild ziglang
+          echo "$RUNNER_TEMP/zigbuild/bin" >> "$GITHUB_PATH"
       - run: cargo zigbuild --release --locked -p sccr-relay --target "$TARGET"
       - name: package
         run: |
