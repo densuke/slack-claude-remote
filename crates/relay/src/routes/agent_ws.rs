@@ -13,6 +13,7 @@ use subtle::ConstantTimeEq;
 use tokio::sync::mpsc;
 
 use crate::chunk::chunk;
+use crate::permission;
 use crate::state::AppState;
 
 const HELLO_TIMEOUT: Duration = Duration::from_secs(10);
@@ -140,9 +141,21 @@ async fn serve(
 async fn handle_frame(state: &AppState, name: &str, text: &str) {
     match serde_json::from_str::<AgentMsg>(text) {
         Ok(AgentMsg::Reply { chat_id, text }) => post_reply(state, &chat_id, &text).await,
-        // ponytail: dropped until permission relay lands in T6-2.
-        Ok(AgentMsg::PermissionRequest { request_id, .. }) => {
-            eprintln!("permission request {request_id} from {name} dropped: not supported")
+        Ok(AgentMsg::PermissionRequest {
+            request_id,
+            tool_name,
+            description,
+            input_preview,
+        }) => {
+            permission::handle_request(
+                state,
+                name,
+                request_id,
+                &tool_name,
+                &description,
+                &input_preview,
+            )
+            .await
         }
         Ok(AgentMsg::Hello { .. }) => {}
         Err(_) => eprintln!("agent {name}: unparseable frame ignored"),

@@ -17,6 +17,7 @@ use crate::slack::verify::sign;
 use crate::state::AppState;
 use crate::store::{Binding, Store, TokenRecord};
 
+mod permission;
 mod ws;
 
 const SECRET: &str = "test-signing-secret";

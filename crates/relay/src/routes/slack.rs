@@ -11,6 +11,7 @@ use protocol::RelayMsg;
 use serde::Deserialize;
 use serde_json::Value;
 
+use crate::permission;
 use crate::slack::api::escape_mrkdwn;
 use crate::slack::commands::{Cmd, parse, pick_response, text_response};
 use crate::slack::events::{Candidate, Envelope, classify};
@@ -71,7 +72,7 @@ pub async fn events(
     }
 }
 
-/// Spec 6.2 steps 4-10. Permission verdicts (steps 8-9) are added in T6-2.
+/// Spec 6.2 steps 4-10, including permission verdicts (steps 8-9).
 async fn handle_message(state: Arc<AppState>, event_id: String, candidate: Option<Candidate>) {
     if !state.dedupe.lock().await.first_seen(&event_id) {
         eprintln!("event {event_id}: duplicate");
@@ -80,14 +81,14 @@ async fn handle_message(state: Arc<AppState>, event_id: String, candidate: Optio
     let Some(c) = candidate else {
         return;
     };
-    let session = {
+    let binding = {
         let store = state.store.lock().await;
         if !store.users.contains(&c.user) {
             eprintln!("event {event_id} chat_id={}: unauthorized user", c.chat_id);
             return;
         }
         match store.bindings.get(&c.chat_id) {
-            Some(binding) => binding.session.clone(),
+            Some(binding) => binding.clone(),
             None => {
                 eprintln!("event {event_id} chat_id={}: unbound", c.chat_id);
                 return;
@@ -95,19 +96,47 @@ async fn handle_message(state: Arc<AppState>, event_id: String, candidate: Optio
         }
     };
 
+    let verdict = {
+        let mut pending = state.pending.lock().await;
+        permission::sweep(&mut pending, (state.now)());
+        permission::match_verdict(&pending, &c, &binding)
+    };
+    if let Some((request_id, behavior)) = verdict {
+        state.pending.lock().await.remove(&request_id);
+        let verdict_msg = RelayMsg::PermissionVerdict {
+            request_id,
+            behavior,
+        };
+        if state.hub.send(&binding.session, verdict_msg).await.is_ok() {
+            eprintln!("event {event_id} chat_id={}: verdict forwarded", c.chat_id);
+        } else {
+            eprintln!(
+                "event {event_id} chat_id={}: session offline for verdict",
+                c.chat_id
+            );
+            notify_offline(&state, &c, &binding.session, &event_id).await;
+        }
+        return;
+    }
+
     let inbound = RelayMsg::Inbound {
         chat_id: c.chat_id.clone(),
         user: c.user.clone(),
         text: c.text.clone(),
     };
-    if state.hub.send(&session, inbound).await.is_ok() {
+    if state.hub.send(&binding.session, inbound).await.is_ok() {
         eprintln!("event {event_id} chat_id={}: forwarded", c.chat_id);
         return;
     }
     eprintln!("event {event_id} chat_id={}: session offline", c.chat_id);
+    notify_offline(&state, &c, &binding.session, &event_id).await;
+}
+
+/// Spec 6.2 step 10 / 7.2 step 9's offline case; both post the same notice.
+async fn notify_offline(state: &AppState, c: &Candidate, session: &str, event_id: &str) {
     let notice = format!(
         "Session *{}* is offline. Your message was not delivered.",
-        escape_mrkdwn(&session)
+        escape_mrkdwn(session)
     );
     if let Err(e) = state
         .slack
