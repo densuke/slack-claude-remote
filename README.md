@@ -170,7 +170,7 @@ channels は research preview の機能なので、`--dangerously-load-developme
 - **Cookie は `Secure` 属性付き**です。管理画面（`/login` `/` `/tokens`）は HTTPS（Caddy 経由）または `localhost` でしかログインできません。IP アドレスや平文 HTTP の e2 に直接アクセスすると Cookie が保存されずログインできません。
 - `SCCR_ADMIN_SLACK_USER` は必ず設定してください。空のままだと OIDC ログインの許可判定が常に失敗し、誰もログインできず、agent トークンも一切発行できません。
 - Cookie セッションと OIDC の pending state はメモリ保持です。relay を再起動すると全員ログアウトされ、進行中のログインもやり直しになります。agent トークンと束縛（binding）は状態ファイル（`SCCR_STATE_FILE`）に永続化されるため、再起動しても消えません。
-- `HttpSlack` には現状リクエストタイムアウトがありません（既知の課題）。Slack API 呼び出しが詰まると、その呼び出しをしている agent 分の relay ループが止まる可能性があります。
+- Slack API 呼び出し（`chat.postMessage`、`openid.connect.token`）は 10 秒でタイムアウトします。タイムアウトした返答はスレッドに投稿されず、relay のログにエラーが残ります。
 - channels は research preview 機能で、`--channels` / `--dangerously-load-development-channels` の仕様は今後変わる可能性があります。開発時に動作確認した Claude Code のバージョンは **2.1.236** です。
 - 接続中セッションが 100 件を超えると、101 件目以降は `/cc` の選択肢に出ません。
 - `thread_broadcast`（チャンネルにも送信付きの返信）やファイル添付（`file_share`）、メッセージ編集（`message_changed`）は Claude に転送されません。
