@@ -1,6 +1,7 @@
 use std::process::ExitCode;
 use std::sync::Arc;
 
+use sccr_relay::auth::oidc::HttpOidc;
 use sccr_relay::config;
 use sccr_relay::routes::router;
 use sccr_relay::slack::api::{HttpSlack, LogSlack, SlackApi};
@@ -31,7 +32,7 @@ async fn run() -> Result<(), String> {
         .map_err(|e| format!("cannot bind {}: {e}", cfg.bind))?;
     let mode = if cfg.dev { " (dev mode)" } else { "" };
     eprintln!("sccr-relay listening on {}{mode}", cfg.bind);
-    let state = Arc::new(AppState::new(cfg, store, slack, unix_now));
+    let state = Arc::new(AppState::new(cfg, store, slack, unix_now).with_oidc(Arc::new(HttpOidc)));
     axum::serve(listener, router(state))
         .await
         .map_err(|e| e.to_string())

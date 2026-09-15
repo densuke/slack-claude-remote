@@ -17,8 +17,8 @@ use crate::slack::commands::{Cmd, parse, pick_response, text_response};
 use crate::slack::events::{Candidate, Envelope, classify};
 use crate::slack::interactions::selected_session;
 use crate::slack::verify::verify;
-use crate::state::AppState;
-use crate::store::{Binding, Store};
+use crate::state::{AppState, save_store};
+use crate::store::Binding;
 
 const UNAUTHORIZED_COMMAND: &str = "You are not authorized to use /cc.";
 const INVITE_BOT: &str = "Invite the bot to this channel first.";
@@ -38,12 +38,6 @@ fn signature_ok(state: &AppState, headers: &HeaderMap, body: &[u8]) -> bool {
         return false;
     };
     verify(&state.cfg.signing_secret, ts, body, sig, (state.now)()).is_ok()
-}
-
-fn save_store(state: &AppState, store: &Store) {
-    if let Err(e) = store.save(&state.cfg.state_file) {
-        eprintln!("state file save failed: {e}");
-    }
 }
 
 pub async fn events(
